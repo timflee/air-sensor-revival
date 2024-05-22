@@ -1,30 +1,29 @@
 def on_button_pressed_a():
-    global liveGraphMode, tempGraph
+    global liveGraphMode
     liveGraphMode = False
     eraseGraph()
     kitronik_air_quality.show("Temp - Replay Mode",
         1,
         kitronik_air_quality.ShowAlign.CENTRE)
-    kitronik_air_quality.show("" + ("" + str(maxTempHistory)),
+    kitronik_air_quality.show("" + str(maxTempHistory),
         2,
         kitronik_air_quality.ShowAlign.RIGHT)
-    kitronik_air_quality.show("" + ("" + str(minTempHistory)),
+    kitronik_air_quality.show("" + str(minTempHistory),
         2,
         kitronik_air_quality.ShowAlign.LEFT)
-    kitronik_air_quality.show("" + ("" + str(tempHistory[len(tempHistory) - 1])) + " C",
+    kitronik_air_quality.show(tempHistory[len(tempHistory) - 1],
         2,
         kitronik_air_quality.ShowAlign.CENTRE)
-    tempGraph = []
     index = 0
     while index <= len(tempHistory) - 1:
-        tempGraph.append(Math.constrain(Math.map(tempHistory[index],
+        kitronik_air_quality.set_pixel(index,
+            Math.constrain(Math.map(tempHistory[index],
                     minTempHistory,
                     maxTempHistory,
                     graphMinY,
                     graphMaxY),
                 graphMaxY,
                 graphMinY))
-        kitronik_air_quality.set_pixel(index, tempGraph[index])
         index += 1
 input.on_button_pressed(Button.A, on_button_pressed_a)
 
@@ -33,14 +32,13 @@ def eraseGraph():
 
 def on_button_pressed_b():
     global liveGraphMode
-    liveGraphMode = not liveGraphMode
+    liveGraphMode = not (liveGraphMode)
 input.on_button_pressed(Button.B, on_button_pressed_b)
 
 def initVariables():
-    global mode, tempHistory, tempGraph, maxHistoryLength, heartBeat, liveGraphMode, graphMaxY, graphMinY, maxTempHistory, minTempHistory, maxTempGlobal, minTempGlobal
+    global mode, tempHistory, maxHistoryLength, heartBeat, liveGraphMode, graphMaxY, graphMinY, maxTempHistory, minTempHistory, maxTempGlobal, minTempGlobal
     mode = ["summary", "temp", "pressure"]
     tempHistory = []
-    tempGraph = []
     maxHistoryLength = 128
     heartBeat = True
     liveGraphMode = True
@@ -50,7 +48,6 @@ def initVariables():
     minTempHistory = 100
     maxTempGlobal = 15
     minTempGlobal = 30
-
 temp = 0
 minTempGlobal = 0
 maxTempGlobal = 0
@@ -59,7 +56,6 @@ maxHistoryLength = 0
 mode: List[str] = []
 graphMaxY = 0
 graphMinY = 0
-tempGraph: List[number] = []
 tempHistory: List[number] = []
 minTempHistory = 0
 maxTempHistory = 0
@@ -74,29 +70,23 @@ statusLEDs.set_zip_led_color(1, kitronik_air_quality.colors(ZipLedColors.GREEN))
 statusLEDs.show()
 kitronik_air_quality.clear()
 
-def on_every_interval():
-    pass
-loops.every_interval(1, on_every_interval)
-
 def on_forever():
     pass
 basic.forever(on_forever)
 
-def on_every_interval2():
+def on_every_interval():
     global temp, maxTempHistory, minTempHistory, maxTempGlobal, minTempGlobal, heartBeat
     kitronik_air_quality.measure_data()
     temp = kitronik_air_quality.read_temperature(kitronik_air_quality.TemperatureUnitList.C)
     if liveGraphMode:
         kitronik_air_quality.show("Temp - Live Mode", 1, kitronik_air_quality.ShowAlign.CENTRE)
-        kitronik_air_quality.show("" + ("" + str(minTempGlobal)),
+        kitronik_air_quality.show("" + str(minTempGlobal),
             2,
             kitronik_air_quality.ShowAlign.LEFT)
-        kitronik_air_quality.show("" + ("" + str(maxTempGlobal)),
+        kitronik_air_quality.show("" + str(maxTempGlobal),
             2,
             kitronik_air_quality.ShowAlign.RIGHT)
-        kitronik_air_quality.show("" + ("" + str(temp)) + " C",
-            2,
-            kitronik_air_quality.ShowAlign.CENTRE)
+        kitronik_air_quality.show("" + str(temp), 2, kitronik_air_quality.ShowAlign.CENTRE)
         kitronik_air_quality.plot(Math.map(temp, 15, 30, 0, 100))
     if temp > maxTempHistory:
         maxTempHistory = temp
@@ -118,5 +108,5 @@ def on_every_interval2():
     else:
         statusLEDs.set_zip_led_color(2, kitronik_air_quality.colors(ZipLedColors.BLACK))
     statusLEDs.show()
-    heartBeat = not heartBeat
-loops.every_interval(100, on_every_interval2)
+    heartBeat = not (heartBeat)
+loops.every_interval(100, on_every_interval)
