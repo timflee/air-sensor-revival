@@ -2,11 +2,11 @@ input.onButtonPressed(Button.A, function () {
     liveGraphMode = false
     eraseGraph()
     kitronik_air_quality.show("Temp - Replay Mode", 1, kitronik_air_quality.ShowAlign.Centre)
-    kitronik_air_quality.show("", 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show("", 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show(maxGlobal[modes.indexOf(currentMode)], 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show(minGlobal[modes.indexOf(currentMode)], 2, kitronik_air_quality.ShowAlign.Left)
     kitronik_air_quality.show(history[0][history[0].length - 1], 2, kitronik_air_quality.ShowAlign.Centre)
     for (let index = 0; index <= history[0].length - 1; index++) {
-        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[0][index], minGlobal, maxGlobal[modes.indexOf(currentMode)], graphMinY, graphMaxY), graphMaxY, graphMinY))
+        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[0][index], minGlobal[modes.indexOf(currentMode)], maxGlobal[modes.indexOf(currentMode)], graphMinY, graphMaxY), graphMaxY, graphMinY))
     }
 })
 function eraseGraph () {
@@ -33,7 +33,7 @@ function initVariables () {
     graphMaxY = 23
     graphMinY = 63
     maxGlobal = [0, 0, 0]
-    minGlobal = 30
+    minGlobal = [100, 100, 100]
 }
 let temp = 0
 let heartBeat = false
@@ -41,11 +41,11 @@ let maxHistoryLength = 0
 let play: number[][] = []
 let graphMaxY = 0
 let graphMinY = 0
+let history: number[][] = []
+let minGlobal: number[] = []
 let currentMode = ""
 let modes: string[] = []
 let maxGlobal: number[] = []
-let minGlobal = 0
-let history: number[][] = []
 let liveGraphMode = false
 let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
@@ -64,16 +64,16 @@ loops.everyInterval(100, function () {
     temp = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     if (liveGraphMode) {
         kitronik_air_quality.show("Temp - Live Mode", 1, kitronik_air_quality.ShowAlign.Centre)
-        kitronik_air_quality.show("" + minGlobal, 2, kitronik_air_quality.ShowAlign.Left)
-        kitronik_air_quality.show("" + maxGlobal, 2, kitronik_air_quality.ShowAlign.Right)
-        kitronik_air_quality.show("" + temp, 2, kitronik_air_quality.ShowAlign.Centre)
+        kitronik_air_quality.show(minGlobal, 2, kitronik_air_quality.ShowAlign.Left)
+        kitronik_air_quality.show(maxGlobal, 2, kitronik_air_quality.ShowAlign.Right)
+        kitronik_air_quality.show(temp, 2, kitronik_air_quality.ShowAlign.Centre)
         kitronik_air_quality.plot(Math.map(temp, 15, 30, 0, 100))
     }
     if (temp > maxGlobal[modes.indexOf(currentMode)]) {
         maxGlobal[modes.indexOf(currentMode)] = temp
     }
-    if (temp < minGlobal) {
-        minGlobal = temp
+    if (temp < minGlobal[modes.indexOf(currentMode)]) {
+        minGlobal[modes.indexOf(currentMode)] = temp
     }
     if (history[0].length == maxHistoryLength) {
         history[0].shift()
