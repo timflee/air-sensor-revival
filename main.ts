@@ -6,7 +6,7 @@ input.onButtonPressed(Button.A, function () {
     kitronik_air_quality.show("", 2, kitronik_air_quality.ShowAlign.Left)
     kitronik_air_quality.show(history[0][history[0].length - 1], 2, kitronik_air_quality.ShowAlign.Centre)
     for (let index = 0; index <= history[0].length - 1; index++) {
-        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[0][index], minGlobal, maxGlobal, graphMinY, graphMaxY), graphMaxY, graphMinY))
+        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[0][index], minGlobal, maxGlobal[modes.indexOf(currentMode)], graphMinY, graphMaxY), graphMaxY, graphMinY))
     }
 })
 function eraseGraph () {
@@ -32,18 +32,18 @@ function initVariables () {
     liveGraphMode = true
     graphMaxY = 23
     graphMinY = 63
-    maxGlobal = 15
+    maxGlobal = [0, 0, 0]
     minGlobal = 30
 }
 let temp = 0
 let heartBeat = false
 let maxHistoryLength = 0
 let play: number[][] = []
-let modes: string[] = []
-let currentMode = ""
 let graphMaxY = 0
 let graphMinY = 0
-let maxGlobal = 0
+let currentMode = ""
+let modes: string[] = []
+let maxGlobal: number[] = []
 let minGlobal = 0
 let history: number[][] = []
 let liveGraphMode = false
@@ -69,8 +69,8 @@ loops.everyInterval(100, function () {
         kitronik_air_quality.show("" + temp, 2, kitronik_air_quality.ShowAlign.Centre)
         kitronik_air_quality.plot(Math.map(temp, 15, 30, 0, 100))
     }
-    if (temp > maxGlobal) {
-        maxGlobal = temp
+    if (temp > maxGlobal[modes.indexOf(currentMode)]) {
+        maxGlobal[modes.indexOf(currentMode)] = temp
     }
     if (temp < minGlobal) {
         minGlobal = temp
