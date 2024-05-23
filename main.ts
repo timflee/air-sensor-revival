@@ -4,9 +4,9 @@ input.onButtonPressed(Button.A, function () {
     kitronik_air_quality.show("Temp - Replay Mode", 1, kitronik_air_quality.ShowAlign.Centre)
     kitronik_air_quality.show("" + maxTempHistory, 2, kitronik_air_quality.ShowAlign.Right)
     kitronik_air_quality.show("" + minTempHistory, 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(tempHistory[tempHistory.length - 1], 2, kitronik_air_quality.ShowAlign.Centre)
-    for (let index = 0; index <= tempHistory.length - 1; index++) {
-        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(tempHistory[index], minTempHistory, maxTempHistory, graphMinY, graphMaxY), graphMaxY, graphMinY))
+    kitronik_air_quality.show(history[0][history[0].length - 1], 2, kitronik_air_quality.ShowAlign.Centre)
+    for (let index = 0; index <= history[0].length - 1; index++) {
+        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[0][index], minTempHistory, maxTempHistory, graphMinY, graphMaxY), graphMaxY, graphMinY))
     }
 })
 function eraseGraph () {
@@ -15,9 +15,14 @@ function eraseGraph () {
 input.onButtonPressed(Button.B, function () {
     liveGraphMode = !(liveGraphMode)
 })
+input.onLogoEvent(TouchButtonEvent.Pressed, function () {
+	
+})
 function initVariables () {
-    mode = ["summary", "temp", "pressure"]
-    tempHistory = []
+    mode = ["temp", "pressure", "humidity"]
+    history = [[0], [0], [0]]
+    play = [[0], [0], [0]]
+    play[0].removeAt(0)
     maxHistoryLength = 128
     heartBeat = true
     liveGraphMode = true
@@ -33,10 +38,11 @@ let minTempGlobal = 0
 let maxTempGlobal = 0
 let heartBeat = false
 let maxHistoryLength = 0
+let play: number[][] = []
 let mode: string[] = []
 let graphMaxY = 0
 let graphMinY = 0
-let tempHistory: number[] = []
+let history: number[][] = []
 let minTempHistory = 0
 let maxTempHistory = 0
 let liveGraphMode = false
@@ -74,16 +80,16 @@ loops.everyInterval(100, function () {
     if (temp < minTempGlobal) {
         minTempGlobal = temp
     }
-    if (tempHistory.length == maxHistoryLength) {
-        if (tempHistory[0] == maxTempHistory) {
-            maxTempHistory = tempHistory[1]
+    if (history[0].length == maxHistoryLength) {
+        if (history[0][0] == maxTempHistory) {
+            maxTempHistory = history[0][1]
         }
-        if (tempHistory[0] == minTempHistory) {
-            minTempHistory = tempHistory[1]
+        if (history[0][0] == minTempHistory) {
+            minTempHistory = history[0][1]
         }
-        tempHistory.shift()
+        history[0].shift()
     }
-    tempHistory.push(temp)
+    history[0].push(temp)
     if (heartBeat) {
         statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
     } else {

@@ -1,112 +1,97 @@
-def on_button_pressed_a():
-    global liveGraphMode
-    liveGraphMode = False
+input.onButtonPressed(Button.A, function () {
+    liveGraphMode = false
     eraseGraph()
-    kitronik_air_quality.show("Temp - Replay Mode",
-        1,
-        kitronik_air_quality.ShowAlign.CENTRE)
-    kitronik_air_quality.show("" + str(maxTempHistory),
-        2,
-        kitronik_air_quality.ShowAlign.RIGHT)
-    kitronik_air_quality.show("" + str(minTempHistory),
-        2,
-        kitronik_air_quality.ShowAlign.LEFT)
-    kitronik_air_quality.show(tempHistory[len(tempHistory) - 1],
-        2,
-        kitronik_air_quality.ShowAlign.CENTRE)
-    index = 0
-    while index <= len(tempHistory) - 1:
-        kitronik_air_quality.set_pixel(index,
-            Math.constrain(Math.map(tempHistory[index],
-                    minTempHistory,
-                    maxTempHistory,
-                    graphMinY,
-                    graphMaxY),
-                graphMaxY,
-                graphMinY))
-        index += 1
-input.on_button_pressed(Button.A, on_button_pressed_a)
-
-def eraseGraph():
+    kitronik_air_quality.show("Temp - Replay Mode", 1, kitronik_air_quality.ShowAlign.Centre)
+    kitronik_air_quality.show("" + maxTempHistory, 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show("" + minTempHistory, 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show(History[History.length - 1], 2, kitronik_air_quality.ShowAlign.Centre)
+    for (let index = 0; index <= History.length - 1; index++) {
+        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(History[index], minTempHistory, maxTempHistory, graphMinY, graphMaxY), graphMaxY, graphMinY))
+    }
+})
+function eraseGraph () {
     kitronik_air_quality.clear()
-
-def on_button_pressed_b():
-    global liveGraphMode
-    liveGraphMode = not (liveGraphMode)
-input.on_button_pressed(Button.B, on_button_pressed_b)
-
-def initVariables():
-    global mode, tempHistory, maxHistoryLength, heartBeat, liveGraphMode, graphMaxY, graphMinY, maxTempHistory, minTempHistory, maxTempGlobal, minTempGlobal
-    mode = ["summary", "temp", "pressure"]
-    tempHistory = []
+}
+input.onButtonPressed(Button.B, function () {
+    liveGraphMode = !(liveGraphMode)
+})
+function initVariables () {
+    mode = ["temp", "pressure", "humidity"]
+    History = [[0], [0], [0]]
+    play = [[0], [0], [0]]
+    play[0].removeAt(0)
     maxHistoryLength = 128
-    heartBeat = True
-    liveGraphMode = True
+    heartBeat = true
+    liveGraphMode = true
     graphMaxY = 23
     graphMinY = 63
     maxTempHistory = 0
     minTempHistory = 100
     maxTempGlobal = 15
     minTempGlobal = 30
-temp = 0
-minTempGlobal = 0
-maxTempGlobal = 0
-heartBeat = False
-maxHistoryLength = 0
-mode: List[str] = []
-graphMaxY = 0
-graphMinY = 0
-tempHistory: List[number] = []
-minTempHistory = 0
-maxTempHistory = 0
-liveGraphMode = False
-statusLEDs = kitronik_air_quality.create_air_quality_zip_display()
+}
+let temp = 0
+let minTempGlobal = 0
+let maxTempGlobal = 0
+let heartBeat = false
+let maxHistoryLength = 0
+let play: number[][] = []
+let mode: string[] = []
+let graphMaxY = 0
+let graphMinY = 0
+let History: number[][] = []
+let minTempHistory = 0
+let maxTempHistory = 0
+let liveGraphMode = false
+let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
-statusLEDs.set_brightness(10)
-statusLEDs.set_zip_led_color(0, kitronik_air_quality.colors(ZipLedColors.RED))
+statusLEDs.setBrightness(10)
+statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Red))
 statusLEDs.show()
 initVariables()
-statusLEDs.set_zip_led_color(1, kitronik_air_quality.colors(ZipLedColors.GREEN))
+statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Green))
 statusLEDs.show()
 kitronik_air_quality.clear()
-
-def on_forever():
-    pass
-basic.forever(on_forever)
-
-def on_every_interval():
-    global temp, maxTempHistory, minTempHistory, maxTempGlobal, minTempGlobal, heartBeat
-    kitronik_air_quality.measure_data()
-    temp = kitronik_air_quality.read_temperature(kitronik_air_quality.TemperatureUnitList.C)
-    if liveGraphMode:
-        kitronik_air_quality.show("Temp - Live Mode", 1, kitronik_air_quality.ShowAlign.CENTRE)
-        kitronik_air_quality.show("" + str(minTempGlobal),
-            2,
-            kitronik_air_quality.ShowAlign.LEFT)
-        kitronik_air_quality.show("" + str(maxTempGlobal),
-            2,
-            kitronik_air_quality.ShowAlign.RIGHT)
-        kitronik_air_quality.show("" + str(temp), 2, kitronik_air_quality.ShowAlign.CENTRE)
+basic.forever(function () {
+	
+})
+loops.everyInterval(100, function () {
+    kitronik_air_quality.measureData()
+    temp = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
+    if (liveGraphMode) {
+        kitronik_air_quality.show("Temp - Live Mode", 1, kitronik_air_quality.ShowAlign.Centre)
+        kitronik_air_quality.show("" + minTempGlobal, 2, kitronik_air_quality.ShowAlign.Left)
+        kitronik_air_quality.show("" + maxTempGlobal, 2, kitronik_air_quality.ShowAlign.Right)
+        kitronik_air_quality.show("" + temp, 2, kitronik_air_quality.ShowAlign.Centre)
         kitronik_air_quality.plot(Math.map(temp, 15, 30, 0, 100))
-    if temp > maxTempHistory:
+    }
+    if (temp > maxTempHistory) {
         maxTempHistory = temp
-    if temp < minTempHistory:
+    }
+    if (temp < minTempHistory) {
         minTempHistory = temp
-    if temp > maxTempGlobal:
+    }
+    if (temp > maxTempGlobal) {
         maxTempGlobal = temp
-    if temp < minTempGlobal:
+    }
+    if (temp < minTempGlobal) {
         minTempGlobal = temp
-    if len(tempHistory) == maxHistoryLength:
-        if tempHistory[0] == maxTempHistory:
-            maxTempHistory = tempHistory[1]
-        if tempHistory[0] == minTempHistory:
-            minTempHistory = tempHistory[1]
-        tempHistory.shift()
-    tempHistory.append(temp)
-    if heartBeat:
-        statusLEDs.set_zip_led_color(2, kitronik_air_quality.colors(ZipLedColors.BLUE))
-    else:
-        statusLEDs.set_zip_led_color(2, kitronik_air_quality.colors(ZipLedColors.BLACK))
+    }
+    if (History.length == maxHistoryLength) {
+        if (History[0] == maxTempHistory) {
+            maxTempHistory = History[1]
+        }
+        if (History[0] == minTempHistory) {
+            minTempHistory = History[1]
+        }
+        History.shift()
+    }
+    History.push(temp)
+    if (heartBeat) {
+        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
+    } else {
+        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Black))
+    }
     statusLEDs.show()
-    heartBeat = not (heartBeat)
-loops.every_interval(100, on_every_interval)
+    heartBeat = !(heartBeat)
+})
