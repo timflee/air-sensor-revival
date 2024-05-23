@@ -15,11 +15,14 @@ function eraseGraph () {
 input.onButtonPressed(Button.B, function () {
     liveGraphMode = !(liveGraphMode)
 })
+// Toggle to the next mode
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
-	
+    currentMode = modes[(modes.indexOf(currentMode) + 1) % modes.length]
+    basic.showString(currentMode)
 })
 function initVariables () {
-    mode = ["temp", "pressure", "humidity"]
+    modes = ["T", "P", "H"]
+    currentMode = "T"
     history = [[0], [0], [0]]
     play = [[0], [0], [0]]
     play[0].removeAt(0)
@@ -39,7 +42,8 @@ let maxTempGlobal = 0
 let heartBeat = false
 let maxHistoryLength = 0
 let play: number[][] = []
-let mode: string[] = []
+let modes: string[] = []
+let currentMode = ""
 let graphMaxY = 0
 let graphMinY = 0
 let history: number[][] = []
