@@ -1,3 +1,9 @@
+function nthRank (largest: boolean, arr: any[], rank: number) {
+    arrCopy = []
+    for (let index = 0; index <= arr.length - 1; index++) {
+        arrCopy.push(arr[index])
+    }
+}
 input.onButtonPressed(Button.A, function () {
     currentMode = "GraphMode"
     kitronik_air_quality.clear()
@@ -19,9 +25,7 @@ function updateHeader () {
     }
 }
 input.onButtonPressed(Button.AB, function () {
-    maxGlobal[sensors.indexOf(currentSensor)] = history[sensors.indexOf(currentSensor)][history[sensors.indexOf(currentSensor)].length - 1]
-    minGlobal[sensors.indexOf(currentSensor)] = history[sensors.indexOf(currentSensor)][history[sensors.indexOf(currentSensor)].length - 1]
-    updateHeader()
+	
 })
 input.onButtonPressed(Button.B, function () {
     kitronik_air_quality.clear()
@@ -70,6 +74,7 @@ let currentSensor = ""
 let sensors: string[] = []
 let history: number[][] = []
 let currentMode = ""
+let arrCopy: number[] = []
 let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
 statusLEDs.setBrightness(10)
