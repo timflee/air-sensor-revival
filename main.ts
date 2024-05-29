@@ -26,7 +26,7 @@ input.onButtonPressed(Button.A, function () {
     kitronik_air_quality.clear()
     updateHeader()
     for (let index = 0; index <= history[sensors.indexOf(currentSensor)].length - 1; index++) {
-        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[sensors.indexOf(currentSensor)][index], minGlobal[sensors.indexOf(currentSensor)], maxGlobal[sensors.indexOf(currentSensor)], graphMinY, graphMaxY), graphMaxY, graphMinY))
+        kitronik_air_quality.setPixel(index, Math.constrain(Math.map(history[sensors.indexOf(currentSensor)][index], minHistory[sensors.indexOf(currentSensor)], maxHistory[sensors.indexOf(currentSensor)], graphMinY, graphMaxY), graphMaxY, graphMinY))
     }
 })
 function updateHeader () {
@@ -50,9 +50,9 @@ input.onButtonPressed(Button.B, function () {
     updateHeader()
 })
 function updateGraphMode () {
-    kitronik_air_quality.show(maxGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show(minGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(currentReading[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
+    kitronik_air_quality.show(maxHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show(minHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show(currentReadings[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
 }
 // Toggle to the next mode
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
@@ -70,23 +70,24 @@ function initVariables () {
     currentMode = "LiveMode"
     graphMaxY = 23
     graphMinY = 63
-    maxGlobal = [0, 0]
-    minGlobal = [100, 100]
-    currentReading = [0, 0]
+    maxHistory = [0, 0]
+    minHistory = [100, 100]
+    currentReadings = [0, 0]
 }
 function updateLiveMode () {
     kitronik_air_quality.show("Temp", 2, kitronik_air_quality.ShowAlign.Left)
     kitronik_air_quality.show("RH", 3, kitronik_air_quality.ShowAlign.Left)
     kitronik_air_quality.show("Pressure", 5, kitronik_air_quality.ShowAlign.Left)
 }
+let currentReading = 0
 let heartBeat = false
 let maxHistoryLength = 0
 let play: number[][] = []
-let currentReading: number[] = []
+let currentReadings: number[] = []
 let graphMaxY = 0
 let graphMinY = 0
-let maxGlobal: number[] = []
-let minGlobal: number[] = []
+let maxHistory: number[] = []
+let minHistory: number[] = []
 let currentSensor = ""
 let sensors: string[] = []
 let history: number[][] = []
@@ -117,8 +118,8 @@ basic.forever(function () {
 })
 loops.everyInterval(200, function () {
     kitronik_air_quality.measureData()
-    currentReading[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
-    currentReading[1] = kitronik_air_quality.readHumidity()
+    currentReadings[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
+    currentReadings[1] = kitronik_air_quality.readHumidity()
     if (currentMode == "GraphMode") {
         updateGraphMode()
     }
@@ -126,16 +127,23 @@ loops.everyInterval(200, function () {
         updateLiveMode()
     }
     for (let index = 0; index <= sensors.length - 1; index++) {
-        if (currentReading[index] > maxGlobal[index]) {
-            maxGlobal[index] = currentReading[index]
+        currentReading = currentReadings[index]
+        if (currentReading > maxHistory[index]) {
+            maxHistory[index] = currentReading
         }
-        if (currentReading[index] < minGlobal[index]) {
-            minGlobal[index] = currentReading[index]
+        if (currentReading < minHistory[index]) {
+            minHistory[index] = currentReading
         }
         if (history[index].length == maxHistoryLength) {
+            if (history[index][0] == maxHistory[index]) {
+                maxHistory[index] = nthRank(true, history[index], 2)
+            }
+            if (history[index][0] == minHistory[index]) {
+                minHistory[index] = nthRank(false, history[index], 2)
+            }
             history[index].shift()
         }
-        history[index].push(currentReading[index])
+        history[index].push(currentReadings[index])
     }
     if (heartBeat) {
         statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
