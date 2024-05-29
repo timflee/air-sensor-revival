@@ -1,5 +1,5 @@
 input.onButtonPressed(Button.A, function () {
-    liveGraphMode = false
+    currentMode = "GraphMode"
     kitronik_air_quality.clear()
     updateHeader()
     for (let index = 0; index <= history[sensors.indexOf(currentSensor)].length - 1; index++) {
@@ -10,17 +10,29 @@ function updateHeader () {
     kitronik_air_quality.clearLine(1)
     kitronik_air_quality.clearLine(2)
     basic.showString("" + (currentSensor))
-    kitronik_air_quality.show(currentSensor, 1, kitronik_air_quality.ShowAlign.Left)
-    if (liveGraphMode) {
+    if (currentMode == "LiveMode") {
         kitronik_air_quality.show("Live Mode", 1, kitronik_air_quality.ShowAlign.Centre)
-    } else {
-        kitronik_air_quality.show("Replay Mode", 1, kitronik_air_quality.ShowAlign.Centre)
+    }
+    if (currentMode == "GraphMode") {
+        kitronik_air_quality.show(currentSensor, 1, kitronik_air_quality.ShowAlign.Left)
+        kitronik_air_quality.show("Graph Mode", 1, kitronik_air_quality.ShowAlign.Centre)
     }
 }
-input.onButtonPressed(Button.B, function () {
-    liveGraphMode = !(liveGraphMode)
+input.onButtonPressed(Button.AB, function () {
+    maxGlobal[sensors.indexOf(currentSensor)] = history[sensors.indexOf(currentSensor)][history[sensors.indexOf(currentSensor)].length - 1]
+    minGlobal[sensors.indexOf(currentSensor)] = history[sensors.indexOf(currentSensor)][history[sensors.indexOf(currentSensor)].length - 1]
     updateHeader()
 })
+input.onButtonPressed(Button.B, function () {
+    kitronik_air_quality.clear()
+    currentMode = "LiveMode"
+    updateHeader()
+})
+function updateGraphMode () {
+    kitronik_air_quality.show(maxGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show(minGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show(currentReading[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
+}
 // Toggle to the next mode
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     currentSensor = sensors[(sensors.indexOf(currentSensor) + 1) % sensors.length]
@@ -34,17 +46,22 @@ function initVariables () {
     play[0].removeAt(0)
     maxHistoryLength = 128
     heartBeat = true
-    liveGraphMode = true
+    currentMode = "LiveMode"
     graphMaxY = 23
     graphMinY = 63
     maxGlobal = [0, 0]
     minGlobal = [100, 100]
     currentReading = [0, 0]
 }
-let currentReading: number[] = []
+function updateLiveMode () {
+    kitronik_air_quality.show("Temp", 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show("RH", 3, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show("Pressure", 5, kitronik_air_quality.ShowAlign.Left)
+}
 let heartBeat = false
 let maxHistoryLength = 0
 let play: number[][] = []
+let currentReading: number[] = []
 let graphMaxY = 0
 let graphMinY = 0
 let maxGlobal: number[] = []
@@ -52,7 +69,7 @@ let minGlobal: number[] = []
 let currentSensor = ""
 let sensors: string[] = []
 let history: number[][] = []
-let liveGraphMode = false
+let currentMode = ""
 let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
 statusLEDs.setBrightness(10)
@@ -70,11 +87,11 @@ loops.everyInterval(200, function () {
     kitronik_air_quality.measureData()
     currentReading[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     currentReading[1] = kitronik_air_quality.readHumidity()
-    kitronik_air_quality.show(maxGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show(minGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(currentReading[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
-    if (liveGraphMode) {
-        kitronik_air_quality.plot(Math.map(currentReading[sensors.indexOf(currentSensor)], 15, 30, 0, 100))
+    if (currentMode == "GraphMode") {
+        updateGraphMode()
+    }
+    if (currentMode == "LiveMode") {
+        updateLiveMode()
     }
     for (let index = 0; index <= sensors.length - 1; index++) {
         if (currentReading[index] > maxGlobal[index]) {
