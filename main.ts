@@ -1,7 +1,20 @@
-function nthRank (largest: boolean, arr: any[], rank: number) {
+function nthRank (largest: boolean, arr: number[], rank: number) {
     arrCopy = []
     for (let index = 0; index <= arr.length - 1; index++) {
         arrCopy.push(arr[index])
+    }
+    bubblePop = true
+    while (bubblePop) {
+        bubblePop = false
+        for (let index = 0; index <= arrCopy.length - 2; index++) {
+            let list: number[] = []
+            if (list[index] > list[index + 1]) {
+                bubblePop = true
+                temp = arrCopy[index]
+                arrCopy[index] = arrCopy[index + 1]
+                arrCopy[index + 1] = temp
+            }
+        }
     }
 }
 input.onButtonPressed(Button.A, function () {
@@ -74,6 +87,8 @@ let currentSensor = ""
 let sensors: string[] = []
 let history: number[][] = []
 let currentMode = ""
+let temp = 0
+let bubblePop = false
 let arrCopy: number[] = []
 let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
