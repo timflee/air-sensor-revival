@@ -7,14 +7,18 @@ function nthRank (largest: boolean, arr: number[], rank: number) {
     while (bubblePop) {
         bubblePop = false
         for (let index = 0; index <= arrCopy.length - 2; index++) {
-            let list: number[] = []
-            if (list[index] > list[index + 1]) {
+            if (arrCopy[index] > arrCopy[index + 1]) {
                 bubblePop = true
                 temp = arrCopy[index]
                 arrCopy[index] = arrCopy[index + 1]
                 arrCopy[index + 1] = temp
             }
         }
+    }
+    if (largest) {
+        return arrCopy[arrCopy.length - rank]
+    } else {
+        return arrCopy[rank - 1]
     }
 }
 input.onButtonPressed(Button.A, function () {
@@ -90,6 +94,14 @@ let currentMode = ""
 let temp = 0
 let bubblePop = false
 let arrCopy: number[] = []
+let test = [
+6,
+1,
+5,
+7
+]
+basic.showNumber(nthRank(true, test, 2))
+basic.pause(200)
 let statusLEDs = kitronik_air_quality.createAirQualityZIPDisplay()
 statusLEDs.clear()
 statusLEDs.setBrightness(10)
