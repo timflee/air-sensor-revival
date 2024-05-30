@@ -48,9 +48,9 @@ input.onButtonPressed(Button.B, function () {
     updateHeader()
 })
 function updateGraphMode () {
-    kitronik_air_quality.show(maxHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show(minHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(currentReadings[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
+    kitronik_air_quality.show(" " + maxHistory[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show(" " + minHistory[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show(" " + currentReadings[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Centre)
     for (let index = 0; index <= history[sensors.indexOf(currentSensor)].length - 1; index++) {
         tempY = Math.map(history[sensors.indexOf(currentSensor)][index], minHistory[sensors.indexOf(currentSensor)] * 0.999, maxHistory[sensors.indexOf(currentSensor)] * 1.001, graphMinY, graphMaxY)
         kitronik_air_quality.setPixel(index, Math.constrain(tempY, graphMaxY, graphMinY))
@@ -67,12 +67,14 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
 })
 function initVariables () {
     sensors = ["T", "H"]
+    units = ["C", "RH"]
     currentSensor = sensors[0]
     history = [[0], [0]]
     play = [[0], [0]]
     play[0].removeAt(0)
     maxHistoryLength = 128
     heartBeat = true
+    historyBeat = true
     currentMode = "LiveMode"
     graphMaxY = 23
     graphMinY = 63
@@ -83,16 +85,20 @@ function initVariables () {
     currentReadings = [0, 0]
 }
 function updateLiveMode () {
-    kitronik_air_quality.show(maxGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show(minGlobal[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(currentReadings[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
+    for (let index = 0; index <= sensors.length - 1; index++) {
+        kitronik_air_quality.show("" + minGlobal[index] + " ", index + 2, kitronik_air_quality.ShowAlign.Left)
+        kitronik_air_quality.show(" " + currentReadings[index] + " " + units[index], index + 2, kitronik_air_quality.ShowAlign.Centre)
+        kitronik_air_quality.show(" " + maxGlobal[index] + "", index + 2, kitronik_air_quality.ShowAlign.Right)
+    }
 }
 let currentReading = 0
 let minGlobal: number[] = []
 let maxGlobal: number[] = []
+let historyBeat = false
 let heartBeat = false
 let maxHistoryLength = 0
 let play: number[][] = []
+let units: string[] = []
 let graphMaxY = 0
 let graphMinY = 0
 let tempY = 0
@@ -128,9 +134,6 @@ loops.everyInterval(500, function () {
     kitronik_air_quality.measureData()
     currentReadings[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     currentReadings[1] = kitronik_air_quality.readHumidity()
-    if (currentMode == "GraphMode") {
-    	
-    }
     if (currentMode == "LiveMode") {
         updateLiveMode()
     }
@@ -148,6 +151,17 @@ loops.everyInterval(500, function () {
         if (currentReading < minHistory[index]) {
             minHistory[index] = currentReading
         }
+    }
+    if (heartBeat) {
+        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
+    } else {
+        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Black))
+    }
+    statusLEDs.show()
+    heartBeat = !(heartBeat)
+})
+loops.everyInterval(2000, function () {
+    for (let index = 0; index <= sensors.length - 1; index++) {
         if (history[index].length == maxHistoryLength) {
             if (history[index][0] == maxHistory[index]) {
                 maxHistory[index] = nthRank(true, history[index], 2)
@@ -159,13 +173,12 @@ loops.everyInterval(500, function () {
         }
         history[index].push(currentReadings[index])
     }
-    if (heartBeat) {
-        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
+    if (historyBeat) {
+        statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Green))
     } else {
-        statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Black))
+        statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Black))
     }
-    statusLEDs.show()
-    heartBeat = !(heartBeat)
+    historyBeat = !(historyBeat)
 })
 basic.forever(function () {
 	
