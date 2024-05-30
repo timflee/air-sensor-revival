@@ -39,8 +39,14 @@ function updateHeader () {
         kitronik_air_quality.show("Graph Mode", 1, kitronik_air_quality.ShowAlign.Centre)
     }
 }
+function setupLogging () {
+    kitronik_air_quality.setTime(0, 0, 0)
+    kitronik_air_quality.addProjectInfo("Tim", "Logged Data")
+}
 input.onButtonPressed(Button.AB, function () {
-	
+    kitronik_air_quality.logData()
+    kitronik_air_quality.setDataForUSB()
+    kitronik_air_quality.sendAllData()
 })
 input.onButtonPressed(Button.B, function () {
     currentMode = "LiveMode"
@@ -66,10 +72,28 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     }
 })
 function initVariables () {
-    sensors = ["T", "H"]
-    units = ["C", "RH"]
+    sensors = [
+    "T",
+    "H",
+    "P",
+    "C",
+    "Q"
+    ]
+    units = [
+    "C",
+    "RH",
+    "kPa",
+    "ppm",
+    "IAQ %"
+    ]
     currentSensor = sensors[0]
-    history = [[0], [0]]
+    history = [
+    [0],
+    [0],
+    [0],
+    [0],
+    [0]
+    ]
     play = [[0], [0]]
     play[0].removeAt(0)
     maxHistoryLength = 128
@@ -78,11 +102,41 @@ function initVariables () {
     currentMode = "LiveMode"
     graphMaxY = 23
     graphMinY = 63
-    maxHistory = [0, 0]
-    maxGlobal = [0, 0]
-    minHistory = [100, 100]
-    minGlobal = [100, 100]
-    currentReadings = [0, 0]
+    maxHistory = [
+    0,
+    0,
+    0,
+    0,
+    0
+    ]
+    maxGlobal = [
+    0,
+    0,
+    0,
+    0,
+    0
+    ]
+    minHistory = [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+    ]
+    minGlobal = [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+    ]
+    currentReadings = [
+    0,
+    0,
+    0,
+    0,
+    0
+    ]
 }
 function updateLiveMode () {
     for (let index = 0; index <= sensors.length - 1; index++) {
@@ -125,15 +179,21 @@ statusLEDs.clear()
 statusLEDs.setBrightness(10)
 statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Red))
 statusLEDs.show()
-initVariables()
-statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Green))
+kitronik_air_quality.setupGasSensor()
+kitronik_air_quality.calcBaselines()
+statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Black))
 statusLEDs.show()
+music.play(music.tonePlayable(523, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
+initVariables()
 kitronik_air_quality.clear()
 updateHeader()
 loops.everyInterval(500, function () {
     kitronik_air_quality.measureData()
     currentReadings[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     currentReadings[1] = kitronik_air_quality.readHumidity()
+    currentReadings[2] = Math.round(kitronik_air_quality.readPressure(kitronik_air_quality.PressureUnitList.Pa) / 10) / 100
+    currentReadings[3] = kitronik_air_quality.readeCO2()
+    currentReadings[4] = kitronik_air_quality.getAirQualityPercent()
     if (currentMode == "LiveMode") {
         updateLiveMode()
     }
