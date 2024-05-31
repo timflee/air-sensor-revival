@@ -180,7 +180,7 @@ let currentMode = ""
 let temp = 0
 let bubblePop = false
 let arrCopy: number[] = []
-let enableGasSensor = false
+let enableGasSensor = true
 if (input.logoIsPressed()) {
     kitronik_air_quality.sendAllData()
     music.play(music.tonePlayable(523, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
