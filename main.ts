@@ -27,6 +27,17 @@ input.onButtonPressed(Button.A, function () {
     updateHeader()
     updateGraphMode()
 })
+function limitDigits (num: number, nDigits: number, nPad: number) {
+    numString = convertToText(num)
+    result = ""
+    for (let index = 0; index <= Math.min(nDigits - 1, numString.length); index++) {
+        result = "" + result + numString.substr(index, 1)
+    }
+    while (result.length < nPad) {
+        result = "" + result + " "
+    }
+    return result
+}
 function updateHeader () {
     kitronik_air_quality.clearLine(1)
     kitronik_air_quality.clearLine(2)
@@ -50,9 +61,9 @@ input.onButtonPressed(Button.B, function () {
     updateHeader()
 })
 function updateGraphMode () {
-    kitronik_air_quality.show(" " + maxHistory[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Right)
-    kitronik_air_quality.show(" " + minHistory[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Left)
-    kitronik_air_quality.show(" " + currentReadings[sensors.indexOf(currentSensor)] + " ", 2, kitronik_air_quality.ShowAlign.Centre)
+    kitronik_air_quality.show("" + maxHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Right)
+    kitronik_air_quality.show("" + minHistory[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Left)
+    kitronik_air_quality.show("" + currentReadings[sensors.indexOf(currentSensor)], 2, kitronik_air_quality.ShowAlign.Centre)
     for (let index = 0; index <= history[sensors.indexOf(currentSensor)].length - 1; index++) {
         tempY = Math.map(history[sensors.indexOf(currentSensor)][index], minHistory[sensors.indexOf(currentSensor)] * 0.999, maxHistory[sensors.indexOf(currentSensor)] * 1.001, graphMinY, graphMaxY)
         kitronik_air_quality.setPixel(index, Math.constrain(tempY, graphMaxY, graphMinY))
@@ -79,7 +90,7 @@ function initVariables () {
     units = [
     "C",
     "RH",
-    "kPa",
+    "kP",
     "L",
     "ppm",
     "IAQ %"
@@ -142,9 +153,9 @@ function initVariables () {
 }
 function updateLiveMode () {
     for (let index = 0; index <= sensors.length - 1; index++) {
-        kitronik_air_quality.show("" + minGlobal[index] + " ", index + 2, kitronik_air_quality.ShowAlign.Left)
-        kitronik_air_quality.show(" " + currentReadings[index] + " " + units[index], index + 2, kitronik_air_quality.ShowAlign.Centre)
-        kitronik_air_quality.show(" " + maxGlobal[index] + "", index + 2, kitronik_air_quality.ShowAlign.Right)
+        kitronik_air_quality.show("" + limitDigits(minGlobal[index], 6, 0), index + 2, kitronik_air_quality.ShowAlign.Left)
+        kitronik_air_quality.show("" + limitDigits(currentReadings[index], 6, 0) + " " + units[index], index + 2, kitronik_air_quality.ShowAlign.Centre)
+        kitronik_air_quality.show("" + limitDigits(maxGlobal[index], 6, 0), index + 2, kitronik_air_quality.ShowAlign.Right)
     }
 }
 let currentReading = 0
@@ -163,10 +174,13 @@ let maxHistory: number[] = []
 let sensors: string[] = []
 let units: string[] = []
 let currentSensor = ""
+let result = ""
+let numString = ""
 let currentMode = ""
 let temp = 0
 let bubblePop = false
 let arrCopy: number[] = []
+let enableGasSensor = false
 if (input.logoIsPressed()) {
     kitronik_air_quality.sendAllData()
     music.play(music.tonePlayable(523, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
@@ -198,10 +212,13 @@ statusLEDs.clear()
 statusLEDs.setBrightness(10)
 statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Red))
 statusLEDs.show()
-kitronik_air_quality.setupGasSensor()
-kitronik_air_quality.calcBaselines()
-kitronik_air_quality.includeIAQ(kitronik_air_quality.onOff(true))
-kitronik_air_quality.includeCO2(kitronik_air_quality.onOff(true))
+if (enableGasSensor) {
+    kitronik_air_quality.setupGasSensor()
+    kitronik_air_quality.calcBaselines()
+} else {
+    kitronik_air_quality.includeIAQ(kitronik_air_quality.onOff(false))
+    kitronik_air_quality.includeCO2(kitronik_air_quality.onOff(false))
+}
 statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Black))
 statusLEDs.show()
 music.play(music.tonePlayable(523, music.beat(BeatFraction.Whole)), music.PlaybackMode.UntilDone)
@@ -212,10 +229,12 @@ loops.everyInterval(500, function () {
     kitronik_air_quality.measureData()
     currentReadings[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     currentReadings[1] = kitronik_air_quality.readHumidity()
-    currentReadings[2] = Math.round(kitronik_air_quality.readPressure(kitronik_air_quality.PressureUnitList.Pa) / 10) / 100
+    currentReadings[2] = kitronik_air_quality.readPressure(kitronik_air_quality.PressureUnitList.Pa) / 1000
     currentReadings[3] = input.lightLevel()
-    currentReadings[4] = kitronik_air_quality.readeCO2()
-    currentReadings[5] = kitronik_air_quality.getAirQualityPercent()
+    if (enableGasSensor) {
+        currentReadings[4] = kitronik_air_quality.readeCO2()
+        currentReadings[5] = kitronik_air_quality.getAirQualityPercent()
+    }
     if (currentMode == "LiveMode") {
         updateLiveMode()
     }
@@ -245,7 +264,7 @@ loops.everyInterval(500, function () {
 basic.forever(function () {
 	
 })
-loops.everyInterval(86400, function () {
+loops.everyInterval(5000, function () {
     for (let index = 0; index <= sensors.length - 1; index++) {
         if (history[index].length == maxHistoryLength) {
             if (history[index][0] == maxHistory[index]) {
