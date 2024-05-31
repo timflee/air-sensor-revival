@@ -105,8 +105,9 @@ function initVariables () {
     []
     ]
     maxHistoryLength = 128
-    heartBeat = true
-    historyBeat = true
+    liveBeat = true
+    logBeat = true
+    readBeat = true
     currentMode = "LiveMode"
     graphMaxY = 23
     graphMinY = 63
@@ -161,8 +162,9 @@ function updateLiveMode () {
 let currentReading = 0
 let minGlobal: number[] = []
 let maxGlobal: number[] = []
-let historyBeat = false
-let heartBeat = false
+let readBeat = false
+let logBeat = false
+let liveBeat = false
 let maxHistoryLength = 0
 let graphMaxY = 0
 let graphMinY = 0
@@ -225,7 +227,7 @@ music.play(music.tonePlayable(523, music.beat(BeatFraction.Whole)), music.Playba
 initVariables()
 kitronik_air_quality.clear()
 updateHeader()
-loops.everyInterval(500, function () {
+loops.everyInterval(2000, function () {
     kitronik_air_quality.measureData()
     currentReadings[0] = kitronik_air_quality.readTemperature(kitronik_air_quality.TemperatureUnitList.C)
     currentReadings[1] = kitronik_air_quality.readHumidity()
@@ -234,9 +236,6 @@ loops.everyInterval(500, function () {
     if (enableGasSensor) {
         currentReadings[4] = kitronik_air_quality.readeCO2()
         currentReadings[5] = kitronik_air_quality.getAirQualityPercent()
-    }
-    if (currentMode == "LiveMode") {
-        updateLiveMode()
     }
     for (let index = 0; index <= sensors.length - 1; index++) {
         currentReading = currentReadings[index]
@@ -253,18 +252,30 @@ loops.everyInterval(500, function () {
             minHistory[index] = currentReading
         }
     }
-    if (heartBeat) {
+    if (readBeat) {
+        statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Red))
+    } else {
+        statusLEDs.setZipLedColor(0, kitronik_air_quality.colors(ZipLedColors.Black))
+    }
+    statusLEDs.show()
+    readBeat = !(readBeat)
+})
+loops.everyInterval(2000, function () {
+    if (currentMode == "LiveMode") {
+        updateLiveMode()
+    }
+    if (liveBeat) {
         statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Blue))
     } else {
         statusLEDs.setZipLedColor(2, kitronik_air_quality.colors(ZipLedColors.Black))
     }
     statusLEDs.show()
-    heartBeat = !(heartBeat)
+    liveBeat = !(liveBeat)
 })
 basic.forever(function () {
 	
 })
-loops.everyInterval(5000, function () {
+loops.everyInterval(168750, function () {
     for (let index = 0; index <= sensors.length - 1; index++) {
         if (history[index].length == maxHistoryLength) {
             if (history[index][0] == maxHistory[index]) {
@@ -277,11 +288,12 @@ loops.everyInterval(5000, function () {
         }
         history[index].push(currentReadings[index])
     }
-    if (historyBeat) {
+    kitronik_air_quality.logData()
+    if (logBeat) {
         statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Green))
     } else {
         statusLEDs.setZipLedColor(1, kitronik_air_quality.colors(ZipLedColors.Black))
     }
-    kitronik_air_quality.logData()
-    historyBeat = !(historyBeat)
+    statusLEDs.show()
+    logBeat = !(logBeat)
 })
